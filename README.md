@@ -9,6 +9,7 @@ c rust and others program languages for leetcode.
 |684|冗余连接|[C](https://leetcode.com/problems/redundant-connection/)|
 |1102|得分最高的路径|[C](https://leetcode.com/problems/path-with-maximum-minimum-value/)|
 |1631|最小体力消耗路径|[C](https://leetcode.com/problems/path-with-minimum-effort/)|
+|778|水位上升的泳池中游泳|[C](https://leetcode.com/problems/swim-in-rising-water/)|
 
 ## 相似题目
 
