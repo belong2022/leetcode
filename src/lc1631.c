@@ -1,47 +1,3 @@
-#if 0 // 二分 + DFS
-#include <stdbool.h>
-#include <math.h>
-#include <string.h>
-
-int diff[4][2] = {{1,0},{0,1},{-1,0},{0,-1}};
-
-bool dfs(int **heights, int x, int y, int m, int n, int k, int* visit) {
-    visit[x * n + y] = true;
-    if (x == m-1 && y == n-1) {
-        return true;
-    }
-    for (int i=0; i<4; ++i) {
-        int x1 = x + diff[i][0];
-        int y1 = y + diff[i][1];
-        if (x1 >= 0 && x1 < m && y1 >= 0 && y1 < n && !visit[x1 * n + y1] && heights[x1][y1] >= k) {
-            if (dfs(heights, x1, y1, m, n, k, visit)) {
-                return true;
-            }
-        }
-    }
-    return false;
-}
-
-int maximumMinimumPath(int** heights, int heightsSize, int* heightsColSize){
-    int m = heightsSize;
-    int n = heightsColSize[0];
-    int lo = 0;
-    int hi = fmin(heights[0][0], heights[m - 1][n - 1]);
-    int visit[m * n];
-    int ans;
-    while (lo <= hi) {
-        int mid = lo + ((hi - lo) >> 1);
-        memset(visit, 0, sizeof(visit));
-        if (dfs(heights, 0, 0, m, n, mid, visit)) {
-            ans = mid;
-            lo = mid + 1;
-        } else {
-            hi = mid - 1;
-        }
-    }
-    return ans;
-}
-#endif
 
 #if 0 // BFS 二分
 #include <math.h>
@@ -50,11 +6,11 @@ int maximumMinimumPath(int** heights, int heightsSize, int* heightsColSize){
 
 int dirs[4][2] = {{-1, 0}, {1, 0}, {0, -1}, {0, 1}};
 
-int maximumMinimumPath(int** heights, int heightsSize, int* heightsColSize) {
+int minimumEffortPath(int** heights, int heightsSize, int* heightsColSize) {
     int m = heightsSize;
     int n = heightsColSize[0];
     int left = 0;
-    int right = fmin(heights[0][0], heights[m - 1][n - 1]);
+    int right = 999999;
     int ans = 0;
     while (left <= right) {
         int mid = left + ((right - left) >> 1);
@@ -72,7 +28,7 @@ int maximumMinimumPath(int** heights, int heightsSize, int* heightsColSize) {
             for (int i = 0; i < 4; ++i) {
                 int nx = x + dirs[i][0];
                 int ny = y + dirs[i][1];
-                if (nx >= 0 && nx < m && ny >= 0 && ny < n && !seen[nx * n + ny] && heights[nx][ny] >= mid) {
+                if (nx >= 0 && nx < m && ny >= 0 && ny < n && !seen[nx * n + ny] && abs(heights[x][y] - heights[nx][ny]) <= mid) {
                     q[qright][0] = nx;
                     q[qright++][1] = ny;
                     seen[nx * n + ny] = 1;
@@ -81,16 +37,16 @@ int maximumMinimumPath(int** heights, int heightsSize, int* heightsColSize) {
         }
         if (seen[m * n - 1]) {
             ans = mid;
-            left = mid + 1;
-        } else {
             right = mid - 1;
+        } else {
+            left = mid + 1;
         }
     }
     return ans;
 }
 #endif
 
-#if 1 // 并查集
+#if 0 // 并查集
 #include <stdlib.h>
 #include <math.h>
 #include <stdio.h>
@@ -144,10 +100,10 @@ int cmp(const void* a, const void* b) {
     return ta->dh - tb->dh;
 }
 
-int maximumMinimumPath(int** heights, int heightsSize, int* heightsColSize) {
+int minimumEffortPath(int** heights, int heightsSize, int* heightsColSize) {
     int m = heightsSize;
     int n = heightsColSize[0];
-    EDGE edges[n * m ];
+    EDGE edges[n * m * 2]; // 一个点对应两条边
     int edgesSize = 0;
 
     for (int i = 0; i < m; ++i) {
@@ -155,13 +111,13 @@ int maximumMinimumPath(int** heights, int heightsSize, int* heightsColSize) {
             if ( i + 1 < m) {
                 edges[edgesSize].ps = i * n + j;
                 edges[edgesSize].pe = (i + 1) * n + j;
-                edges[edgesSize].dh = fmin(heights[i][j], heights[i+1][j]);
+                edges[edgesSize].dh = fabs(heights[i][j] - heights[i+1][j]);
                 edgesSize++;
             }
             if (j + 1 < n) {
                 edges[edgesSize].ps = i * n + j;
                 edges[edgesSize].pe = i * n + j + 1;
-                edges[edgesSize].dh = fmin(heights[i][j], heights[i][j+1]);
+                edges[edgesSize].dh = fabs(heights[i][j] - heights[i][j+1]);
                 edgesSize++;
             }
         }
@@ -178,5 +134,57 @@ int maximumMinimumPath(int** heights, int heightsSize, int* heightsColSize) {
         }
     }
     return ans;
+}
+#endif
+
+#if 0 // Dijkstra
+int minimumEffortPath(int** heights, int heightsSize, int* heightsColSize) {
+
+}
+#endif
+
+#if 1 // 二分 + DFS
+#include <stdbool.h>
+#include <math.h>
+#include <string.h>
+
+int diff[4][2] = {{1,0},{0,1},{-1,0},{0,-1}};
+
+bool dfs(int **heights, int x, int y, int m, int n, int k, int* visit) {
+    if (x == m-1 && y == n-1) {
+        return true;
+    }
+    if (visit[x * n + y]) {
+        return false;
+    }
+    visit[x * n + y] = true;
+    for (int i=0; i<4; ++i) {
+        int x1 = x + diff[i][0];
+        int y1 = y + diff[i][1];
+        if (x1 >= 0 && x1 < m && y1 >= 0 && y1 < n && fabs(heights[x][y] - heights[x1][y1]) <= k) {
+            if (dfs(heights, x1, y1, m, n, k, visit)) {
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
+int minimumEffortPath(int** heights, int heightsSize, int* heightsColSize){
+    int m = heightsSize;
+    int n = heightsColSize[0];
+    int lo = 0;
+    int hi = 1000000;
+    int visit[m * n];
+    while (lo < hi) {
+        int mid = lo + ((hi - lo) >> 1);
+        memset(visit, 0, sizeof(visit));
+        if (dfs(heights, 0, 0, m, n, mid, visit)) {
+            hi = mid;
+        } else {
+            lo = mid + 1;
+        }
+    }
+    return lo;
 }
 #endif
